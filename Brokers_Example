@@ -1,0 +1,55 @@
+---Brokers-Rev Confirmed---
+SELECT
+    final_table.acct_id,
+    zip,
+    event_name,
+    total_price,
+    team,
+    event_day,
+    event_date,
+    section_name,
+    row_name,
+    seat_num,
+    tag,
+    price_code
+FROM
+(
+    SELECT DISTINCT
+            pc_ticket*num_seats AS total_price,
+            event_name,
+            section_name,
+            row_name,
+            seat_num,
+            acct_id,
+            last_seat,
+            pc_ticket,
+            num_seats,
+            event_date,
+            plan_event_name,
+            group_flag,
+            price_code,
+            team,
+            event_day
+    FROM
+        dbo.Ticketmaster_v_ticket_expanded
+) tm_survey_and_ticket_expanded
+OUTER APPLY
+(
+    SELECT TOP 1 *
+    FROM
+        dbo.Ticketmaster_v_Customer
+    WHERE
+        dbo.Ticketmaster_v_Customer.acct_id = tm_survey_and_ticket_expanded.acct_id
+) final_table
+WHERE
+    plan_event_name LIKE '18P%'
+    AND
+    tag LIKE 'BKR'
+    AND 
+    (
+        substring(price_code, 3, 1) LIKE 'N' 
+        OR
+        substring(price_code, 3, 1) LIKE 'R' 
+        OR
+        substring(price_code, 3, 1) LIKE 'U' 
+    )
